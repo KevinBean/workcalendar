@@ -27,12 +27,13 @@ def folderWalk(rootDir,filename):
         for d in dirs:
             mtime = os.path.getmtime(os.path.join(root,d))
             ctime = os.path.getctime(os.path.join(root, d))
-            dline = [d,mtime,ctime]
+            dline = [d.encode('utf-8'),mtime,ctime]
+            print dline
             writer.writerow(dline)
         for f in files:
             mtime = os.path.getmtime(os.path.join(root, f))
             ctime = os.path.getctime(os.path.join(root, f))
-            fline = [f, mtime, ctime]
+            fline = [f.encode('utf-8'), mtime, ctime]
             writer.writerow(fline)
     csvfile.close()
     return rootDir,filename
@@ -43,12 +44,14 @@ def word_frequency(text):
     :param text:
     :return:
     '''
+    print text
     from collections import Counter
-    words = [word for word in jieba.cut(text,cut_all=True) if len(word) >= 2]
+    words = [word for word in jieba.cut(text) if len(word) >= 2]
     c = Counter(words)
-    for word_freq in c.most_common(10):
+    print words
+    for word_freq in c.most_common(20):
         word, freq = word_freq
-        print(word.encode('utf-8'), freq)
+        print word, freq
 
 def cat_by_created(filename):
     '''
@@ -69,18 +72,19 @@ def cat_by_created(filename):
             data_for_year = data_for_year[data_for_year[u'CreatedTime'] <= stopTime] # 筛选当月数据
             # print data_for_year
             data_for_month = pd.concat([data_for_month,data_for_year]) # 保存当年的当月数据
-        data_for_month.to_csv('month'+str(month)+filename) # 保存每年的当月数据
+        data_for_month[u'Name'].to_csv('month'+str(month)+filename,index=False) # 保存每年的当月数据
 
 if __name__ =='__main__':
-    rootDir = '/Users/bianbin/PycharmProjects/chatbot'
+    # rootDir = '/Users/bianbin/PycharmProjects/chatbot' # for mac
+    rootDir =u'D:\\工程\\' # for windows
     filename = 'file.csv'
-    # folderWalk(rootDir,filename)
+    folderWalk(rootDir,filename)
     cat_by_created(filename)
     for month in range(1, 13):
         filename_by_month = 'month' + str(month) + filename
         csvfile = file(filename_by_month,'rb')
         reader = csv.reader(csvfile)
-        nametext = [row[4] for row in reader] # 第四列是文件名列
-        print  str(nametext)
-        word_frequency(str(nametext))
+        nametext = csvfile.read() # 第四列是文件名列
+        # print  str(nametext)
+        word_frequency(nametext.decode('utf-8'))
 
